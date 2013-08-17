@@ -10,10 +10,7 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib,
-                  sasl,
-                  inets,
-                  ssl
+                  stdlib
                  ]},
   {mod, { plivo_app, []}},
   {env, []}
