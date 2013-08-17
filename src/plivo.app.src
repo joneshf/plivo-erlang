@@ -1,11 +1,19 @@
 {application, plivo,
  [
   {description, ""},
-  {vsn, "1"},
+  {vsn, "0.0.2"},
+  {modules, [
+             plivo_app,
+             plivo_sup,
+             plivo_server
+            ]},
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
+                  stdlib,
+                  sasl,
+                  inets,
+                  ssl
                  ]},
   {mod, { plivo_app, []}},
   {env, []}
