@@ -9,10 +9,14 @@
 -define (AUTH_ID, "").
 -define (AUTH_TOKEN, "").
 
-rest_api(get, Uri) ->
+request(Method, Payload) ->
     inets:start(),
     ssl:start(),
-    httpc:request(get, {Uri, [?AUTH_HEADER]}, [], []).
+    case Method of
+        get -> httpc:request(get, Payload, [], [])
+    end.
+
+rest_api(get, Uri) -> request(get, {Uri, [?AUTH_HEADER]}).
 
 get_account(AuthID) ->
     {ok, Response} = rest_api(get, ?ACCOUNT_URI ++ AuthID),
