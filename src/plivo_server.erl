@@ -58,4 +58,4 @@ request(get, Payload) -> httpc:request(get, Payload, [], []).
 rest_api(get, Uri) -> gen_server:call(?MODULE, {get, {Uri, [?AUTH_HEADER]}}).
 
 %% Api.
-get_account(AuthID) -> rest_api(get, ?ACCOUNT_URI ++ AuthID).
+get_account(AccountID) -> rest_api(get, ?ACCOUNT_URI ++ AccountID).
