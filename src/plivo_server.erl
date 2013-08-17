@@ -28,8 +28,8 @@ init([]) ->
 
 %% Gen_server callbacks.
 
-handle_call({get, Payload}, _From, State) ->
-    {ok, Response} = request(get, Payload),
+handle_call({Method, Payload}, _From, State) ->
+    {ok, Response} = request(Method, Payload),
     Data = process_response(Response),
     {reply, Data, State}.
 
