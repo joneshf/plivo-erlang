@@ -7,9 +7,9 @@
 
 %% Plivo Api
 %% Account.
--export([create_subaccount/2, get_account/1, get_all_subaccounts/1,
-         get_all_subaccounts/2, get_subaccount/2, modify_account/2,
-         modify_subaccount/3]).
+-export([create_subaccount/2, delete_subaccount/2, get_account/1,
+         get_all_subaccounts/1, get_all_subaccounts/2, get_subaccount/2,
+         modify_account/2, modify_subaccount/3]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -72,18 +72,16 @@ init([]) ->
 
 handle_call({post, Url, Params}, _From, State=#auth{id=Id, token=Token}) ->
     % Plivo only accepts json with `POST`.
-    Payload = {Url,
-               [?AUTH_HEADER(Id, Token)],
-               "application/json",
-               "\"" ++ mochijson2:encode({struct,Params}) ++ "\""},
+    Body = binary_to_list(jsx:encode(Params)),
+    Payload = {Url, [?AUTH_HEADER(Id, Token)], "application/json", Body},
     Data = request(post, Payload),
     {reply, Data, State};
-handle_call({get, Url}, _From, State=#auth{id=Id, token=Token}) ->
+handle_call({Method, Url}, _From, State=#auth{id=Id, token=Token}) ->
     Payload = {Url, [?AUTH_HEADER(Id, Token)]},
-    Data = request(get, Payload),
+    Data = request(Method, Payload),
     {reply, Data, State}.
 
-handle_cast({auth_id, Id}, State)       -> {noreply, State#auth{id=Id}};
+handle_cast({auth_id,       Id}, State) -> {noreply, State#auth{id=Id}};
 handle_cast({auth_token, Token}, State) -> {noreply, State#auth{token=Token}}.
 
 handle_info(_Info, State) -> {noreply, State}.
@@ -96,7 +94,8 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 %% This is the entry point to the gen_server.
 -spec api(atom(), Path::string()) -> json_term().
-api(get, Path) -> gen_server:call(?MODULE, {get, ?API_URL ++ Path}).
+api(get, Path)    -> gen_server:call(?MODULE, {get,    ?API_URL ++ Path});
+api(delete, Path) -> gen_server:call(?MODULE, {delete, ?API_URL ++ Path}).
 -spec api(atom(), Path::string(), Params::params()) -> json_term().
 api(get, Path, Params) ->
     gen_server:call(?MODULE,
@@ -153,6 +152,12 @@ set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 -spec create_subaccount(AId::string(), Params::params()) -> json_term().
 create_subaccount(AId, Params) ->
     api(post, "Account/" ++ AId ++ "/Subaccount/", Params).
+
+%% @spec delete_subaccount(AId::string(), SId::string()) -> json_term()
+%% @doc Removes the subaccount from the specified account.
+-spec delete_subaccount(AId::string(), SId::string()) -> json_term().
+delete_subaccount(AId, SId) ->
+    api(delete, "Account/" ++ AId ++ "/Subaccount/" ++ SId ++ "/").
 
 %% @spec get_account(AId::string()) -> json_term()
 %% @doc Returns the account information for the supplied AId.
