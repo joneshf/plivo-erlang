@@ -13,7 +13,9 @@
 -record (auth, {id="", token=""}).
 
 %% Plivo Account info.
--define(ACCOUNT_URI, "https://api.plivo.com/v1/Account/").
+-define(API_BASE, "https://api.plivo.com/").
+-define(API_URL, ?API_BASE_URL ++ ?API_VERSION).
+-define(API_VERSION, "v1/").
 -define(AUTH_HEADER(Id, Token),
         {"Authorization",
          "Basic " ++ base64:encode_to_string(Id ++ ":" ++ Token)}).
@@ -57,7 +59,7 @@ process_response({{_,Code,_R},_H,Body}) when Code =< 599 -> Body.
 
 request(get, Payload) -> httpc:request(get, Payload, [], []).
 
-api(get, Uri) -> gen_server:call(?MODULE, {get, Uri}).
+api(get, Path) -> gen_server:call(?MODULE, {get, ?API_URL ++ Path}).
 
 %% Api.
 
@@ -66,5 +68,5 @@ set_auth_id(ID)       -> gen_server:cast(?MODULE, {auth_id, ID}).
 set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 
 %% Plivo api.
-get_account(AccountID) -> api(get, ?ACCOUNT_URI ++ AccountID).
+get_account(AccountID) -> api(get, "Account/" ++ AccountID).
 
