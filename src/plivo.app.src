@@ -1,11 +1,11 @@
 {application, plivo,
  [
   {description, ""},
-  {vsn, "0.0.2"},
+  {vsn, "0.0.3"},
   {modules, [
              plivo_app,
              plivo_sup,
-             plivo_server
+             rest_api
             ]},
   {registered, []},
   {applications, [

@@ -1,4 +1,4 @@
--module(plivo_server).
+-module(rest_api).
 
 -behaviour(gen_server).
 
@@ -43,7 +43,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 %% Helpers.
 parse_json(Json) ->
-    {struct, Data} = mochijson:decode(Body),
+    {struct, Data} = mochijson:decode(Json),
     Data.
 
 %% TODO: Handle individual responses.
@@ -55,7 +55,7 @@ process_response({{_,Code,_R},_H,Body}) when Code =< 599 -> Body.
 
 request(get, Payload) -> httpc:request(get, Payload, [], []).
 
-rest_api(get, Uri) -> gen_server:call(?MODULE, {get, {Uri, [?AUTH_HEADER]}}).
+api(get, Uri) -> gen_server:call(?MODULE, {get, {Uri, [?AUTH_HEADER]}}).
 
 %% Api.
-get_account(AccountID) -> rest_api(get, ?ACCOUNT_URI ++ AccountID).
+get_account(AccountID) -> api(get, ?ACCOUNT_URI ++ AccountID).

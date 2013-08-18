@@ -2,3 +2,4 @@ deps
 ebin
 *.beam
 rel/plivo
+.eunit

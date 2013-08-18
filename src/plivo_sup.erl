@@ -24,6 +24,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    PlivoServer = ?CHILD(plivo_server, worker),
-    {ok, { {one_for_one, 5, 10}, [PlivoServer]} }.
+    RestApi = ?CHILD(rest_api, worker),
+    {ok, { {one_for_one, 5, 10}, [RestApi]} }.
 
