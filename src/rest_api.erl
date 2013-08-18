@@ -7,7 +7,7 @@
 
 %% Plivo Api
 %% Account.
--export([get_account/1, modify_account/2]).
+-export([create_subaccount/2, get_account/1, modify_account/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -31,6 +31,9 @@
 %% @type json_term() = json_string() | json_number() | json_array() |
 %%                     json_object()
 
+-type params()       :: [param()].
+-type param()        :: {atom(), string()}.
+
 -type payload()      :: {string(), headers()} |
                         {string(), headers(), content_type(), body()}.
 -type headers()      :: [header()].
@@ -38,11 +41,21 @@
 -type content_type() :: string().
 -type body()         :: string().
 
--type json_string()  :: atom | string() | binary().
--type json_number()  :: integer() | float().
+-type status_line()  :: {protocol(), status_code(), reason()}.
+-type protocol()     :: string().
+-type status_code()  :: integer().
+-type reason()       :: string().
+
+-type json_string()  :: atom |
+                        string() |
+                        binary().
+-type json_number()  :: integer() |
+                        float().
 -type json_array()   :: {array, [json_term()]}.
 -type json_object()  :: {struct, [{json_string(), json_term()}]}.
--type json_term()    :: json_string() | json_number() | json_array() |
+-type json_term()    :: json_string() |
+                        json_number() |
+                        json_array() |
                         json_object().
 
 start_link() ->
@@ -86,6 +99,7 @@ api(post, Path, Params) ->
     gen_server:call(?MODULE, {post, ?API_URL ++ Path, Params}).
 
 %% These are the only valid response codes from plivo right now.
+-spec parse_response({status_line(),headers(),body()}) -> json_term().
 parse_response({{_,  200,_R},_H,Body}) -> mochijson:decode(Body);
 parse_response({{_,  201,_R},_H,Body}) -> mochijson:decode(Body);
 parse_response({{_,  202,_R},_H,Body}) -> mochijson:decode(Body);
@@ -95,10 +109,10 @@ parse_response({{_,  401,_R},_H,Body}) -> Body;
 parse_response({{_,  404,_R},_H,Body}) -> Body;
 parse_response({{_,  405,_R},_H,Body}) -> Body;
 parse_response({{_,  500,_R},_H,Body}) -> Body;
-parse_response({{_,_Code,_R},_H,Body}) -> Body.
+parse_response({ _StatusLine,_H,Body}) -> Body.
 
 %% Thin wrapper around httpc:request.
--spec request(atom(), Payload::payload()) -> body() | json_term().
+-spec request(atom(), Payload::payload()) -> json_term().
 request(Method, Payload) ->
     {ok, Response} = httpc:request(Method, Payload, [], []),
     parse_response(Response).
@@ -117,6 +131,17 @@ set_auth_id(ID)       -> gen_server:cast(?MODULE, {auth_id, ID}).
 set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 
 %% Plivo api.
+
+%% Account.
+
+%% @spec create_subaccount(AccountID::string()) -> json_term()
+%% @doc Creates a new subaccount and returns a response.
+%%      Requires two params name and enabled.
+%%      name is the name of the subaccount.
+%%      enabled specifies whether a subaccount should be enabled.
+-spec create_subaccount(AccountID::string(), Params::params()) -> json_term().
+create_subaccount(AccountID, Params) ->
+    api(post, "Account/" ++ AccountID ++ "/Subaccount/", Params).
 
 %% @spec get_account(AccountID::string()) -> json_term()
 %% @doc Returns the account information for the supplied AccountID.
