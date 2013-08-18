@@ -7,9 +7,9 @@
 
 %% Plivo Api
 %% Account.
--export([create_subaccount/2, delete_subaccount/2, get_account/1,
-         get_all_subaccounts/1, get_all_subaccounts/2, get_subaccount/2,
-         modify_account/2, modify_subaccount/3]).
+-export([create_subaccount/1, delete_subaccount/1, get_account/0,
+         get_all_subaccounts/0, get_all_subaccounts/1, get_subaccount/1,
+         modify_account/1, modify_subaccount/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -19,8 +19,9 @@
 -record (auth, {id="", token=""}).
 
 %% Plivo Account info.
+-define(API_ACCOUNT, "Account/").
 -define(API_BASE, "https://api.plivo.com/").
--define(API_URL, ?API_BASE ++ ?API_VERSION).
+-define(API_URL, ?API_BASE ++ ?API_VERSION ++ ?API_ACCOUNT).
 -define(API_VERSION, "v1/").
 -define(AUTH_HEADER(Id, Token),
         {"Authorization",
@@ -70,13 +71,15 @@ init([]) ->
 
 %% Gen_server callbacks.
 
-handle_call({post, Url, Params}, _From, State=#auth{id=Id, token=Token}) ->
+handle_call({post, Path, Params}, _From, State=#auth{id=Id, token=Token}) ->
     % Plivo only accepts json with `POST`.
+    Url = ?API_URL ++ Id ++ Path,
     Body = binary_to_list(jsx:encode(Params)),
     Payload = {Url, [?AUTH_HEADER(Id, Token)], "application/json", Body},
     Data = request(post, Payload),
     {reply, Data, State};
-handle_call({Method, Url}, _From, State=#auth{id=Id, token=Token}) ->
+handle_call({Method, Path}, _From, State=#auth{id=Id, token=Token}) ->
+    Url = ?API_URL ++ Id ++ "/" ++ Path,
     Payload = {Url, [?AUTH_HEADER(Id, Token)]},
     Data = request(Method, Payload),
     {reply, Data, State}.
@@ -94,14 +97,13 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 %% This is the entry point to the gen_server.
 -spec api(atom(), Path::string()) -> json_term().
-api(get, Path)    -> gen_server:call(?MODULE, {get,    ?API_URL ++ Path});
-api(delete, Path) -> gen_server:call(?MODULE, {delete, ?API_URL ++ Path}).
+api(get, Path)    -> gen_server:call(?MODULE, {get,    Path});
+api(delete, Path) -> gen_server:call(?MODULE, {delete, Path}).
 -spec api(atom(), Path::string(), Params::params()) -> json_term().
 api(get, Path, Params) ->
-    gen_server:call(?MODULE,
-                    {get, ?API_URL ++ Path ++ "?" ++ generate_query(Params)});
+    gen_server:call(?MODULE, {get, Path ++ "?" ++ generate_query(Params)});
 api(post, Path, Params) ->
-    gen_server:call(?MODULE, {post, ?API_URL ++ Path, Params}).
+    gen_server:call(?MODULE, {post, Path, Params}).
 
 %% Take [{key, value}] list and create a query string.
 -spec generate_query([{Key::string(), Value::string()}]) -> string().
@@ -144,63 +146,63 @@ set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 
 %% Account.
 
-%% @spec create_subaccount(AId::string(), Params::params()) -> json_term()
+%% @spec create_subaccount(Params::params()) -> json_term()
 %% @doc Creates a new subaccount and returns a response.
 %%      Requires two params name and enabled.
 %%      name is the name of the subaccount.
 %%      enabled specifies whether a subaccount should be enabled.
--spec create_subaccount(AId::string(), Params::params()) -> json_term().
-create_subaccount(AId, Params) ->
-    api(post, "Account/" ++ AId ++ "/Subaccount/", Params).
+-spec create_subaccount(Params::params()) -> json_term().
+create_subaccount(Params) ->
+    api(post, "Subaccount/", Params).
 
-%% @spec delete_subaccount(AId::string(), SId::string()) -> json_term()
+%% @spec delete_subaccount(SId::string()) -> json_term()
 %% @doc Removes the subaccount from the specified account.
--spec delete_subaccount(AId::string(), SId::string()) -> json_term().
-delete_subaccount(AId, SId) ->
-    api(delete, "Account/" ++ AId ++ "/Subaccount/" ++ SId ++ "/").
+-spec delete_subaccount(SId::string()) -> json_term().
+delete_subaccount(SId) ->
+    api(delete, "Subaccount/" ++ SId ++ "/").
 
-%% @spec get_account(AId::string()) -> json_term()
+%% @spec get_account() -> json_term()
 %% @doc Returns the account information for the supplied AId.
--spec get_account(AId::string()) -> json_term().
-get_account(AId) -> api(get, "Account/" ++ AId ++ "/").
+-spec get_account() -> json_term().
+get_account() -> api(get, "/").
 
-%% @spec get_all_subaccounts(AId::string()) -> json_term()
+%% @spec get_all_subaccounts() -> json_term()
 %% @doc Returns the subaccounts information for the supplied AId.
--spec get_all_subaccounts(AId::string()) -> json_term().
-get_all_subaccounts(AId) -> get_all_subaccounts(AId, []).
+-spec get_all_subaccounts() -> json_term().
+get_all_subaccounts() -> get_all_subaccounts([]).
 
-%% @spec get_all_subaccounts(AId::string(), Params::params()) -> json_term()
+%% @spec get_all_subaccounts(Params::params()) -> json_term()
 %% @doc Returns the subaccounts information for the supplied AId.
 %%      Optional params are: limit, offset.
 %%      limit is the maximum number of results returned.  Max 20.
 %%      offset is the subaccount start number.  Zero based.
 %%      That is, if you want accounts 23-29, you would pass in params
 %%      [{limit, 7}, {offset, 22}]
--spec get_all_subaccounts(AId::string(), Params::params()) -> json_term().
-get_all_subaccounts(AId, Params) ->
-    api(get, "Account/" ++ AId ++ "/Subaccount/", Params).
+-spec get_all_subaccounts(Params::params()) -> json_term().
+get_all_subaccounts(Params) ->
+    api(get, "Subaccount/", Params).
 
-%% @spec get_subaccount(AId::string(), SId::string()) -> json_term()
-%% @doc Returns the subaccount information for the supplied AId, SId combo.
--spec get_subaccount(AId::string(), SId::string()) -> json_term().
-get_subaccount(AId, SId) ->
-    api(get, "Account/" ++ AId ++ "/Subaccount/" ++ SId ++ "/").
+%% @spec get_subaccount(SId::string()) -> json_term()
+%% @doc Returns the subaccount information for the supplied SId combo.
+-spec get_subaccount(SId::string()) -> json_term().
+get_subaccount(SId) ->
+    api(get, "Subaccount/" ++ SId ++ "/").
 
-%% @spec modify_account(AId::string(), Params::params()) -> json_term()
+%% @spec modify_account(Params::params()) -> json_term()
 %% @doc Modifies an existing account.
 %%      Optional Params are name, city and address.
 %%      Params must be a list of key, val tuples.
 %%      E.g.: [{name, "Wilson"}, {address, "Some island."}]
--spec modify_account(AId::string(), Params::params()) -> json_term().
-modify_account(AId, Params) -> api(post, "Account/" ++ AId ++ "/", Params).
+-spec modify_account(Params::params()) -> json_term().
+modify_account(Params) -> api(post, "/", Params).
 
-%% @spec modify_subaccount(AId::string(), SId::string(), Params::params()) ->
+%% @spec modify_subaccount(SId::string(), Params::params()) ->
 %%       json_term()
 %% @doc Modifies an existing Subaccount.
 %%      Requires two params name and enabled.
 %%      name is the name of the subaccount.
 %%      enabled specifies whether a subaccount should be enabled.
--spec modify_subaccount(AId::string(), SId::string(), Params::params()) ->
+-spec modify_subaccount(SId::string(), Params::params()) ->
       json_term().
-modify_subaccount(AId, SId, Params) ->
-    api(post, "Account/" ++ AId ++ "/Subaccount/" ++ SId ++ "/", Params).
+modify_subaccount(SId, Params) ->
+    api(post, "Subaccount/" ++ SId ++ "/", Params).
