@@ -27,15 +27,18 @@
         {"Authorization",
          "Basic " ++ base64:encode_to_string(Id ++ ":" ++ Token)}).
 
-%% @type json_string() = atom | string() | binary()
-%% @type json_number() = integer() | float()
-%% @type json_array() = {array, [json_term()]}
-%% @type json_object() = {struct, [{json_string(), json_term()}]}
-%% @type json_term() = json_string() | json_number() | json_array() |
-%%                     json_object()
+%% @type json_string() = binary()
+%% @type json_number() = integer()
+%%                     | float()
+%% @type json_array()  = [json_term()]
+%% @type json_object() = [{json_string(), json_term()}]
+%% @type json_term()   = json_string()
+%%                     | json_number()
+%%                     | json_array()
+%%                     | json_object()
 
 -type params()       :: [param()].
--type param()        :: {atom(), string()}.
+-type param()        :: {atom(), binary()}.
 
 -type payload()      :: {string(), headers()} |
                         {string(), headers(), content_type(), body()}.
@@ -50,14 +53,14 @@
 -type reason()       :: string().
 
 -type json_string()  :: binary().
--type json_number()  :: integer() |
-                        float().
+-type json_number()  :: integer()
+                      | float().
 -type json_array()   :: [json_term()].
 -type json_object()  :: [{json_string(), json_term()}].
--type json_term()    :: json_string() |
-                        json_number() |
-                        json_array() |
-                        json_object().
+-type json_term()    :: json_string()
+                      | json_number()
+                      | json_array()
+                      | json_object().
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -97,18 +100,24 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 -spec api(atom(), Path::string()) -> json_term().
 api(get, Path)    -> gen_server:call(?MODULE, {get,    Path});
 api(delete, Path) -> gen_server:call(?MODULE, {delete, Path}).
+
 -spec api(atom(), Path::string(), Params::params()) -> json_term().
 api(get, Path, Params) ->
-    gen_server:call(?MODULE, {get, Path ++ "?" ++ generate_query(Params)});
+    Query = http_uri:encode(lists:flatten(generate_query(Params))),
+    gen_server:call(?MODULE, {get, Path ++ "?" ++ Query});
 api(post, Path, Params) ->
     gen_server:call(?MODULE, {post, Path, Params}).
 
+%% Basically slap a `=` between the pair.
+%% Handles types better.
+-spec predify({K::atom(), V::json_term()}) -> string().
+predify({K,V}) -> io_lib:format("~s=~s", [K,V]).
+
 %% Take [{key, value}] list and create a query string.
 -spec generate_query([{Key::string(), Value::string()}]) -> string().
-generate_query([])        -> "";
-generate_query([{K,V}])   -> http_uri:encode(K) ++ "=" ++ http_uri:encode(V);
-generate_query([{K,V}|P]) ->
-  http_uri:encode(K) ++ "=" ++ http_uri:encode(V) ++ "&" ++ generate_query(P).
+generate_query([])     -> "";
+generate_query([P])    -> predify(P);
+generate_query([P|Ps]) -> predify(P) ++ "&" ++ generate_query(Ps).
 
 %% These are the only valid response codes from plivo right now.
 -spec parse_response({status_line(),headers(),body()}) -> json_term().
@@ -206,3 +215,5 @@ modify_account(Params) -> api(post, "", Params).
       json_term().
 modify_subaccount(SId, Params) ->
     api(post, "Subaccount/" ++ SId ++ "/", Params).
+
+%% @spec create_application()
