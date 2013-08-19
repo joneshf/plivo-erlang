@@ -49,13 +49,11 @@
 -type status_code()  :: integer().
 -type reason()       :: string().
 
--type json_string()  :: atom |
-                        string() |
-                        binary().
+-type json_string()  :: binary().
 -type json_number()  :: integer() |
                         float().
--type json_array()   :: {array, [json_term()]}.
--type json_object()  :: {struct, [{json_string(), json_term()}]}.
+-type json_array()   :: [json_term()].
+-type json_object()  :: [{json_string(), json_term()}].
 -type json_term()    :: json_string() |
                         json_number() |
                         json_array() |
@@ -73,7 +71,7 @@ init([]) ->
 
 handle_call({post, Path, Params}, _From, State=#auth{id=Id, token=Token}) ->
     % Plivo only accepts json with `POST`.
-    Url = ?API_URL ++ Id ++ Path,
+    Url = ?API_URL ++ Id ++ "/" ++ Path,
     Body = binary_to_list(jsx:encode(Params)),
     Payload = {Url, [?AUTH_HEADER(Id, Token)], "application/json", Body},
     Data = request(post, Payload),
@@ -107,14 +105,16 @@ api(post, Path, Params) ->
 
 %% Take [{key, value}] list and create a query string.
 -spec generate_query([{Key::string(), Value::string()}]) -> string().
-generate_query([]) -> "";
-generate_query([{K,V}|P]) -> K ++ "=" ++ V ++ generate_query(P).
+generate_query([])        -> "";
+generate_query([{K,V}])   -> http_uri:encode(K) ++ "=" ++ http_uri:encode(V);
+generate_query([{K,V}|P]) ->
+  http_uri:encode(K) ++ "=" ++ http_uri:encode(V) ++ "&" ++ generate_query(P).
 
 %% These are the only valid response codes from plivo right now.
 -spec parse_response({status_line(),headers(),body()}) -> json_term().
-parse_response({{_,  200,_R},_H,Body}) -> mochijson:decode(Body);
-parse_response({{_,  201,_R},_H,Body}) -> mochijson:decode(Body);
-parse_response({{_,  202,_R},_H,Body}) -> mochijson:decode(Body);
+parse_response({{_,  200,_R},_H,Body}) -> jsx:decode(list_to_binary(Body));
+parse_response({{_,  201,_R},_H,Body}) -> jsx:decode(list_to_binary(Body));
+parse_response({{_,  202,_R},_H,Body}) -> jsx:decode(list_to_binary(Body));
 parse_response({{_,  204,_R},_H,Body}) -> Body;
 parse_response({{_,  400,_R},_H,Body}) -> Body;
 parse_response({{_,  401,_R},_H,Body}) -> Body;
@@ -164,7 +164,7 @@ delete_subaccount(SId) ->
 %% @spec get_account() -> json_term()
 %% @doc Returns the account information for the supplied AId.
 -spec get_account() -> json_term().
-get_account() -> api(get, "/").
+get_account() -> api(get, "").
 
 %% @spec get_all_subaccounts() -> json_term()
 %% @doc Returns the subaccounts information for the supplied AId.
@@ -194,7 +194,7 @@ get_subaccount(SId) ->
 %%      Params must be a list of key, val tuples.
 %%      E.g.: [{name, "Wilson"}, {address, "Some island."}]
 -spec modify_account(Params::params()) -> json_term().
-modify_account(Params) -> api(post, "/", Params).
+modify_account(Params) -> api(post, "", Params).
 
 %% @spec modify_subaccount(SId::string(), Params::params()) ->
 %%       json_term()
