@@ -16,6 +16,10 @@
 -export([create_application/1, delete_application/1, get_application/1,
          get_applications/0, get_applications/1, modify_application/2]).
 
+-export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
+         get_live_calls/0, hangup_call/1, make_call/1, transfer_call/1,
+         transfer_call/2]).
+
 %% gen_server stuff
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -158,7 +162,9 @@ set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 
 %% Plivo api.
 
-%% Account.
+%% ===================================================================
+%% Account
+%% ===================================================================
 
 %% @spec create_subaccount(Params::params()) -> json_term()
 %% @doc Creates a new subaccount and returns a response.
@@ -216,6 +222,11 @@ modify_account(Params) -> api(post, "", Params).
       json_term().
 modify_subaccount(SId, Params) ->
     api(post, "Subaccount/" ++ SId ++ "/", Params).
+
+%% ===================================================================
+%% Application
+%% ===================================================================
+
 
 %% @spec create_application(Params::params()) -> json_term()
 %% @doc Creates a new application.
@@ -313,3 +324,212 @@ get_applications(Params) -> api(get, "Application/", Params).
 -spec modify_application(AppId::string(), Params::params()) -> json_term().
 modify_application(AppId, Params) ->
     api(post, "Application/" ++ AppId ++ "/", Params).
+
+%% ===================================================================
+%% Call
+%% ===================================================================
+
+%% @spec make_call(Params::params()) -> json_term()
+%% @doc Create an outbound call.
+%%      Required Params
+%%      from       The phone number to be used as the caller id
+%%                 with the country code.
+%%                 E.g, a USA caller id number could be, <<"15677654321">>,
+%%                 with 1 for country code.
+%%      to         The regular number(s) or sip endpoint(s) to call.
+%%                 Regular number must be prefixed with country code but
+%%                 without the ‘+’ sign.
+%%                 E.g, to dial a number in the USA, the number could be:
+%%                 15677654321, with '1' for the country code.
+%%                 Sip endpoints must be prefixed with 'sip:'.
+%%                 E.g., sip:john1234@phone.plivo.com.
+%%                 To make bulk calls, the delimiter '<' is used.
+%%                 E.g. 15677654321<15673464321<sip:john1234@phone.plivo.com
+%%      answer_url The URL invoked by Plivo when the outbound call is answered.
+%%
+%%      Optional Params
+%%      answer_method          The method used to call the answer_url.
+%%                             Defaults to POST.
+%%      ring_url               The URL that is notified by Plivo
+%%                             when the call is ringing. Defaults not set.
+%%      ring_method            The method used to call the ring_url.
+%%                             Defaults to POST.
+%%      hangup_url             The URL that is notified by Plivo
+%%                             when the call hangs up.
+%%                             Defaults to answer_url.
+%%      hangup_method          The method used to call the hangup_url.
+%%                             Defaults to POST.
+%%      fallback_url           Invoked by Plivo only if answer_url
+%%                             is unavailable or the XML response is invalid.
+%%                             Should contain a XML response.
+%%      fallback_method        The method used to call the fallback_url.
+%%                             Defaults to POST.
+%%      caller_name            Caller name to use with the call.
+%%      send_digits            Plivo plays DTMF tones when the call is answered.
+%%                             This is useful when dialing a phone number
+%%                             and an extension.
+%%                             Plivo will dial the number,
+%%                             and when the automated system picks up,
+%%                             sends the DTMF tones to connect to the extension.
+%%      send_on_preanswer      If set to true and send_digits is also set,
+%%                             digits are sent when the call is in a
+%%                             preanswer state.
+%%                             Defaults to false.
+%%      time_limit             Schedules the call for hangup at a specified
+%%                             time after the call is answered.
+%%      hangup_on_ring         Schedules the call for hangup at a specified
+%%                             time after the call starts ringing.
+%%      machine_detection      Used to detect if the call has been answered
+%%                             by a machine.
+%%                             The valid values are true and hangup.
+%%                             Default time to analyze is 5000 milliseconds
+%%                             You can change it with the
+%%                             machine_detection_time parameter.
+%%                             Note that no XML is processed during
+%%                             the analysis phase.
+%%                             If a machine is detected during the call and
+%%                             machine_detection is set to true,
+%%                             the Machine parameter will be set to true and
+%%                             will be sent to the answer_url, hangup_url, or
+%%                             any other URL that is invoked by the call.
+%%                             If a machine is detected during the call and
+%%                             machine_detection is set to hangup,
+%%                             the call hangs up immediately and
+%%                             a request is made to the hangup_url with
+%%                             the Machine parameter set to true.
+%%      machine_detection_time Time allotted to analyze if the call has been
+%%                             answered by a machine.
+%%                             It should be 2000 <= and <= 10000 in ms.
+%%                             The default value is 5000 ms.
+%%      sip_headers            List of SIP headers in the form of
+%%                             'key=value' pairs, separated by commas.
+%%                             E.g. head1=val1,head2=val2,...,headN=valN.
+%%                             The SIP headers are always prefixed with X-PH-.
+%%                             The SIP headers are present for every HTTP
+%%                             request made by the outbound call.
+%%                             Only [A-Z], [a-z] and [0-9] characters
+%%                             are allowed for the SIP headers key and value.
+%%                             Additionally, the '%' character is also allowed
+%%                             for the SIP headers value so that you can encode
+%%                             this value in the URL.
+%%      ring_timeout           Determines the time in seconds
+%%                             the call should ring.
+%%                             If the call is not answered within the
+%%                             ring_timeout value or
+%%                             the default value of 120 seconds, it is canceled.
+-spec make_call(Params::params()) -> json_term().
+make_call(Params) -> api(post, "Call/", Params).
+
+
+%% @spec get_cdrs() -> json_term()
+%% @doc Gets all call detail records.
+-spec get_cdrs() -> json_term().
+get_cdrs() -> get_cdrs([]).
+
+%% @spec get_cdrs(Params::params()) -> json_term()
+%% @doc Gets all call detail records.
+%%      subaccount     The id of the subaccount.
+%%      call_direction Filter the results
+%%                     by call direction.
+%%                     The valid inputs are inbound and outbound.
+%%      from_number    Filter the results
+%%                     by the number from where the call originated.
+%%      to_number      Filter the results
+%%                     by the number to which the call was made.
+%%      bill_duration  Filter the results
+%%                     according to billed duration.
+%%                     The value of billed duration is in seconds.
+%%      end_time       Filter the results
+%%                     according to the time of completion.
+%%      limit          Used to display the number of results per page.
+%%                     The maximum number of results that can be fetched is 20.
+%%      offset         Denotes the number of value items by which the results
+%%                     should be offset.
+-spec get_cdrs(Params::params()) -> json_term().
+get_cdrs(Params) -> api(get, "Call/", Params).
+
+%% @spec get_cdr(CallId::string()) -> json_term()
+%% @doc Gets call detail record for a specified call.
+%%      CallId UUID of a call.
+-spec get_cdr(CallId::string()) -> json_term().
+get_cdr(CallId) -> get_cdr(CallId, []).
+
+%% @spec get_cdr(CallId::string(), Params::params()) -> json_term()
+%% @doc Gets call detail record for a specified call.
+%%      CallId UUID of a call.
+%%
+%%      Optional Params
+%%      subaccount The id of the subaccount.
+%%      limit      The number of results.
+%%      offset     The number of pages by which the results should be offset.
+-spec get_cdr(CallId::string(), Params::params()) -> json_term().
+get_cdr(CallId, Params) -> api(get, "Call/" ++ CallId ++ "/", Params).
+
+%% @spec get_live_call(CallId::string()) -> json_term()
+%% @doc Gets details of a specific active call.
+%%      CallId UUID of a call.
+-spec get_live_call(CallId::string()) -> json_term().
+get_live_call(CallId) ->
+    api(get, "Call/" ++ CallId ++ "/", [{status, <<"live">>}]).
+
+%% @spec get_live_calls() -> json_term()
+%% @doc Gets all currently active calls.
+-spec get_live_calls() -> json_term().
+get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
+
+%% @spec hangup_call(CallId::string()) -> json_term()
+%% @doc Hangs up a specific call.
+%%      CallId UUID of a call.
+-spec hangup_call(CallId::string()) -> json_term().
+hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
+
+%% @spec transfer_call(CallId::string()) -> json_term()
+%% @doc Transfer calls from one url to another.
+-spec transfer_call(CallId::string()) -> json_term().
+transfer_call(CallId) -> api(post, "Call/" ++ CallId ++ "/", []).
+
+%% @spec transfer_call(CallId::string(), Params::params()) -> json_term()
+%% @doc Transfer calls from one url to another.
+%%      legs        'aleg', 'bleg' or 'both'.
+%%                  Defaults to 'aleg' 'aleg' will transfer call_uuid.
+%%                  'bleg' will transfer the bridged leg of call_uuid.
+%%                  'both' will transfer call_uuid and bridged leg of call_uuid.
+%%      aleg_url    URL to transfer for 'aleg'.
+%%                  if legs is 'aleg' or 'both',
+%%                  then aleg_url has to be specified.
+%%      aleg_method HTTP method to invoke aleg_url. Defaults to POST.
+%%      bleg_url    URL to transfer for bridged leg.
+%%                  if legs is 'bleg' or 'both',
+%%                  then bleg_url has to be specified.
+%%      bleg_method HTTP method to invoke bleg_url. Defaults to POST.
+-spec transfer_call(CallId::string(), Params::params()) -> json_term().
+transfer_call (CallId, Params) -> api(post, "Call/" ++ CallId ++ "/", Params).
+
+
+%% ===================================================================
+%% Conference
+%% ===================================================================
+
+%% ===================================================================
+%% Endpoint
+%% ===================================================================
+
+%% ===================================================================
+%% Message
+%% ===================================================================
+
+%% ===================================================================
+%% Number
+%% ===================================================================
+
+%% ===================================================================
+%% Carrier
+%% ===================================================================
+
+%% ===================================================================
+%% Pricing
+%% ===================================================================
+
+%% ===================================================================
+%% Recording
+%% ===================================================================
