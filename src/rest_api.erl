@@ -19,8 +19,8 @@
 %% Call.
 -export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
          get_live_calls/0, hangup_call/1, make_call/1, play/2, record/1,
-         record/2, stop_play/1, stop_record/1, stop_record/2, transfer_call/1,
-         transfer_call/2]).
+         record/2, speak/2, stop_play/1, stop_record/1, stop_record/2,
+         stop_speak/1, transfer_call/1, transfer_call/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -548,6 +548,22 @@ record(CallId) -> record(CallId, []).
 -spec record(CallId::string(), Params::params()) -> json_term().
 record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
 
+%% @spec speak(CallId::string(), Params::params()) -> json_term
+%% @doc Play text during a call.
+%%      Required Params
+%%      text Text to be played.
+%%
+%%      Optional Params
+%%      voice    The voice to be used, can be MAN,WOMAN. Defaults to WOMAN.
+%%      language The language to be used.
+%%               See offical documentation for available languages.
+%%               Defaults to en-US.
+%%      loop     If set to true, play indefinitely. Defaults to false.
+%%      mix      If true, mixes sounds with current audio flow.
+%%               Defaults to true.
+-spec speak(CallId::string(), Params::params()) -> json_term().
+speak(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Speak/", Params).
+
 %% @spec stop_play(CallId::string()) -> json_term
 %% @doc Stop playing all sounds during a call.
 -spec stop_play(CallId::string()) -> json_term().
@@ -567,6 +583,11 @@ stop_record(CallId) -> stop_record(CallId, []).
 -spec stop_record(CallId::string(), Params::params()) -> json_term().
 stop_record(CallId, Params) ->
     api(delete, "Call/" ++ CallId ++ "/Record/", Params).
+
+%% @spec stop_speak(CallId::string()) -> json_term
+%% @doc Stop playing text on specified call.
+-spec stop_speak(CallId::string()) -> json_term().
+stop_speak(CallId) -> api(delete, "Call/" ++ CallId ++ "/Speak/").
 
 %% @spec transfer_call(CallId::string()) -> json_term()
 %% @doc Transfer calls from one url to another.
