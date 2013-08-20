@@ -16,9 +16,10 @@
 -export([create_application/1, delete_application/1, get_application/1,
          get_applications/0, get_applications/1, modify_application/2]).
 
+%% Call.
 -export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
-         get_live_calls/0, hangup_call/1, make_call/1, transfer_call/1,
-         transfer_call/2]).
+         get_live_calls/0, hangup_call/1, make_call/1, record/1, record/2,
+         stop_record/1, stop_record/2, transfer_call/1, transfer_call/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -114,6 +115,9 @@ api(delete, Path) -> gen_server:call(?MODULE, {delete, Path}).
 api(get, Path, Params) ->
     Query = http_uri:encode(lists:flatten(generate_query(Params))),
     gen_server:call(?MODULE, {get, Path ++ "?" ++ Query});
+api(delete, Path, Params) ->
+    Query = http_uri:encode(lists:flatten(generate_query(Params))),
+    gen_server:call(?MODULE, {delete, Path ++ "?" ++ Query});
 api(post, Path, Params) ->
     gen_server:call(?MODULE, {post, Path, Params}).
 
@@ -483,6 +487,61 @@ get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
 -spec hangup_call(CallId::string()) -> json_term().
 hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
 
+%% @spec record(CallId::string()) -> json_term()
+%% @doc Record a call.
+-spec record(CallId::string()) -> json_term().
+record(CallId) -> record(CallId, []).
+
+%% @spec record(CallId::string(), Params::params()) -> json_term()
+%% @doc Record a call.
+%%      time_limit           Max recording duration in seconds. Defaults to 60.
+%%      file_format          The format of the recording.
+%%                           The valid formats are mp3 and wav formats.
+%%                           Defaults to mp3.
+%%      transcription_type   The type of transcription required.
+%%                           The following values are allowed:
+%%          auto   This is the default value.
+%%                 Transcription is completely automated.
+%%                 Turnaround time is about 5 minutes.
+%%          hybrid Transcription is a combination of automated and
+%%                 human verification processes.
+%%                 Turnaround time is about 10-15 minutes.
+%%      transcription_url    The URL where the transcription is available.
+%%      transcription_method The method used to invoke the transcription_url.
+%%                           Defaults to POST.
+%%      callback_url         The URL invoked by the API when the recording ends.
+%%                           The following parameters are sent:
+%%          api_id                the same API ID returned by
+%%                                the call record API.
+%%          record_url            the URL to access the recorded file.
+%%          call_uuid             the call uuid of the recorded call.
+%%          recording_duration    duration in seconds of the recording.
+%%          recording_duration_ms duration in milliseconds of the recording.
+%%          recording_start_ms    when the recording started (epoch time UTC)
+%%                                in milliseconds.
+%%          recording_end_ms      when the recording ended (epoch time UTC)
+%%                                in milliseconds.
+%%      callback_method      The method which is used to invoke the
+%%                           callback_url URL.
+%%                           Defaults to POST.
+-spec record(CallId::string(), Params::params()) -> json_term().
+record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
+
+%% @spec stop_record(CallId::string()) -> json_term
+%% @doc Stop recording all calls.
+%%      Optional Params
+%%      URL Stops specific recording.
+-spec stop_record(CallId::string()) -> json_term().
+stop_record(CallId) -> stop_record(CallId, []).
+
+%% @spec stop_record(CallId::string(), Params::params()) -> json_term
+%% @doc Stop recording all calls.
+%%      Optional Params
+%%      URL Stops specific recording.
+-spec stop_record(CallId::string(), Params::params()) -> json_term().
+stop_record(CallId, Params) ->
+    api(delete, "Call/" ++ CallId ++ "/Record/", Params).
+
 %% @spec transfer_call(CallId::string()) -> json_term()
 %% @doc Transfer calls from one url to another.
 -spec transfer_call(CallId::string()) -> json_term().
@@ -504,7 +563,6 @@ transfer_call(CallId) -> api(post, "Call/" ++ CallId ++ "/", []).
 %%      bleg_method HTTP method to invoke bleg_url. Defaults to POST.
 -spec transfer_call(CallId::string(), Params::params()) -> json_term().
 transfer_call (CallId, Params) -> api(post, "Call/" ++ CallId ++ "/", Params).
-
 
 %% ===================================================================
 %% Conference
