@@ -18,8 +18,9 @@
 
 %% Call.
 -export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
-         get_live_calls/0, hangup_call/1, make_call/1, record/1, record/2,
-         stop_record/1, stop_record/2, transfer_call/1, transfer_call/2]).
+         get_live_calls/0, hangup_call/1, make_call/1, play/2, record/1,
+         record/2, stop_play/1, stop_record/1, stop_record/2, transfer_call/1,
+         transfer_call/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -151,7 +152,9 @@ request(Method, Payload) ->
     {ok, Response} = httpc:request(Method, Payload, [], []),
     parse_response(Response).
 
+%% ===================================================================
 %% Api.
+%% ===================================================================
 
 %% Setup api.
 
@@ -487,6 +490,24 @@ get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
 -spec hangup_call(CallId::string()) -> json_term().
 hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
 
+%% @spec play(CallId::string(), Params::params()) -> json_term()
+%% @doc Plays a sound during a call.
+%%      Required Params
+%%      urls A single URL or a list of comma separated URLs
+%%           pointing to an mp3 or wav file.
+%%
+%%      Optional Params
+%%      length Maximum length in seconds to play.
+%%      legs   The leg which to be used, can be aleg (current call),
+%%             bleg (the other party during Dial) or both.
+%%             Defaults to aleg.
+%%      loop   If set to true, play the sounds indefinitely.
+%%             Defaults to false.
+%%      mix    If set to true, sounds are mixed with current audio flow.
+%%             Defaults to true.
+-spec play(CallId::string(), Params::params()) -> json_term().
+play(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Play/", Params).
+
 %% @spec record(CallId::string()) -> json_term()
 %% @doc Record a call.
 -spec record(CallId::string()) -> json_term().
@@ -526,6 +547,11 @@ record(CallId) -> record(CallId, []).
 %%                           Defaults to POST.
 -spec record(CallId::string(), Params::params()) -> json_term().
 record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
+
+%% @spec stop_play(CallId::string()) -> json_term
+%% @doc Stop playing all sounds during a call.
+-spec stop_play(CallId::string()) -> json_term().
+stop_play(CallId) -> api(delete, "Call/" ++ CallId ++ "/Play/").
 
 %% @spec stop_record(CallId::string()) -> json_term
 %% @doc Stop recording all calls.
