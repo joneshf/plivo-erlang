@@ -173,7 +173,7 @@ set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 %% Account
 %% ===================================================================
 
-%% @spec create_subaccount(Params::params()) -> json_term()
+%% @spec create_subaccount(Params::params()) -> json_term().
 %% @doc Creates a new subaccount and returns a response.
 %%      Requires two params name and enabled.
 %%      name is the name of the subaccount.
@@ -181,22 +181,22 @@ set_auth_token(Token) -> gen_server:cast(?MODULE, {auth_token, Token}).
 -spec create_subaccount(Params::params()) -> json_term().
 create_subaccount(Params) -> api(post, "Subaccount/", Params).
 
-%% @spec delete_subaccount(SId::string()) -> json_term()
+%% @spec delete_subaccount(SId::string()) -> json_term().
 %% @doc Removes the subaccount from the specified account.
 -spec delete_subaccount(SId::string()) -> json_term().
 delete_subaccount(SId) -> api(delete, "Subaccount/" ++ SId ++ "/").
 
-%% @spec get_account() -> json_term()
+%% @spec get_account() -> json_term().
 %% @doc Returns the account information for the supplied AId.
 -spec get_account() -> json_term().
 get_account() -> api(get, "").
 
-%% @spec get_subaccounts() -> json_term()
+%% @spec get_subaccounts() -> json_term().
 %% @doc Returns the subaccounts information for the supplied AId.
 -spec get_subaccounts() -> json_term().
 get_subaccounts() -> get_subaccounts([]).
 
-%% @spec get_subaccounts(Params::params()) -> json_term()
+%% @spec get_subaccounts(Params::params()) -> json_term().
 %% @doc Returns the subaccounts information for the supplied AId.
 %%      Optional params are: limit, offset.
 %%      limit is the maximum number of results returned.  Max 20.
@@ -206,12 +206,12 @@ get_subaccounts() -> get_subaccounts([]).
 -spec get_subaccounts(Params::params()) -> json_term().
 get_subaccounts(Params) -> api(get, "Subaccount/", Params).
 
-%% @spec get_subaccount(SId::string()) -> json_term()
+%% @spec get_subaccount(SId::string()) -> json_term().
 %% @doc Returns the subaccount information for the supplied SId combo.
 -spec get_subaccount(SId::string()) -> json_term().
 get_subaccount(SId) -> api(get, "Subaccount/" ++ SId ++ "/").
 
-%% @spec modify_account(Params::params()) -> json_term()
+%% @spec modify_account(Params::params()) -> json_term().
 %% @doc Modifies an existing account.
 %%      Optional Params are name, city and address.
 %%      Params must be a list of key, val tuples.
@@ -235,7 +235,7 @@ modify_subaccount(SId, Params) ->
 %% ===================================================================
 
 
-%% @spec create_application(Params::params()) -> json_term()
+%% @spec create_application(Params::params()) -> json_term().
 %% @doc Creates a new application.
 %%      Required params:
 %%          answer_url  The URL Plivo will fetch when a call executes this
@@ -271,22 +271,22 @@ modify_subaccount(SId, Params) ->
 -spec create_application(Params::params()) -> json_term().
 create_application(Params) -> api(post, "Application/", Params).
 
-%% @spec delete_application(AppId::string()) -> json_term()
+%% @spec delete_application(AppId::string()) -> json_term().
 %% @doc Deletes an application.
 -spec delete_application(AppId::string()) -> json_term().
 delete_application(AppId) -> api(delete, "Application/" ++ AppId ++ "/").
 
-%% @spec get_application(AppId::string()) -> json_term()
+%% @spec get_application(AppId::string()) -> json_term().
 %% @doc Grabs one specific application.
 -spec get_application(AppId::string()) -> json_term().
 get_application(AppId) -> api(get, "Application/" ++ AppId ++ "/").
 
-%% @spec get_applications() -> json_term()
+%% @spec get_applications() -> json_term().
 %% @doc Grabs all of the applications.
 -spec get_applications() -> json_term().
 get_applications() -> get_applications([]).
 
-%% @spec get_applications(Params::params()) -> json_term()
+%% @spec get_applications(Params::params()) -> json_term().
 %% @doc Grabs all of the applications.
 %%      Optional params:
 %%          subaccount Id or name or alias of the subaccount,
@@ -298,7 +298,7 @@ get_applications() -> get_applications([]).
 -spec get_applications(Params::params()) -> json_term().
 get_applications(Params) -> api(get, "Application/", Params).
 
-%% @spec modify_application(AppId::string(), Params::params()) -> json_term()
+%% @spec modify_application(AppId::string(), Params::params()) -> json_term().
 %% @doc Modifies an existing application.
 %%      Optional params:
 %%          answer_url           The URL invoked by Plivo
@@ -336,7 +336,75 @@ modify_application(AppId, Params) ->
 %% Call
 %% ===================================================================
 
-%% @spec make_call(Params::params()) -> json_term()
+%% @spec get_cdrs() -> json_term().
+%% @doc Gets all call detail records.
+-spec get_cdrs() -> json_term().
+get_cdrs() -> get_cdrs([]).
+
+%% @spec get_cdrs(Params::params()) -> json_term().
+%% @doc Gets all call detail records.
+%%      subaccount     The id of the subaccount.
+%%      call_direction Filter the results
+%%                     by call direction.
+%%                     The valid inputs are inbound and outbound.
+%%      from_number    Filter the results
+%%                     by the number from where the call originated.
+%%      to_number      Filter the results
+%%                     by the number to which the call was made.
+%%      bill_duration  Filter the results
+%%                     according to billed duration.
+%%                     The value of billed duration is in seconds.
+%%      end_time       Filter the results
+%%                     according to the time of completion.
+%%      limit          Used to display the number of results per page.
+%%                     The maximum number of results that can be fetched is 20.
+%%      offset         Denotes the number of value items by which the results
+%%                     should be offset.
+-spec get_cdrs(Params::params()) -> json_term().
+get_cdrs(Params) -> api(get, "Call/", Params).
+
+%% @spec get_cdr(CallId::string()) -> json_term().
+%% @doc Gets call detail record for a specified call.
+%%      CallId UUID of a call.
+-spec get_cdr(CallId::string()) -> json_term().
+get_cdr(CallId) -> get_cdr(CallId, []).
+
+%% @spec get_cdr(CallId::string(), Params::params()) -> json_term().
+%% @doc Gets call detail record for a specified call.
+%%      CallId UUID of a call.
+%%
+%%      Optional Params
+%%      subaccount The id of the subaccount.
+%%      limit      The number of results.
+%%      offset     The number of pages by which the results should be offset.
+-spec get_cdr(CallId::string(), Params::params()) -> json_term().
+get_cdr(CallId, Params) -> api(get, "Call/" ++ CallId ++ "/", Params).
+
+%% @spec get_live_call(CallId::string()) -> json_term().
+%% @doc Gets details of a specific active call.
+%%      CallId UUID of a call.
+-spec get_live_call(CallId::string()) -> json_term().
+get_live_call(CallId) ->
+    api(get, "Call/" ++ CallId ++ "/", [{status, <<"live">>}]).
+
+%% @spec get_live_calls() -> json_term().
+%% @doc Gets all currently active calls.
+-spec get_live_calls() -> json_term().
+get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
+
+%% @spec hangup_call(CallId::string()) -> json_term().
+%% @doc Hangs up a specific call.
+%%      CallId UUID of a call.
+-spec hangup_call(CallId::string()) -> json_term().
+hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
+
+%% @spec hangup_request(ReqId::string()) -> json_term().
+%% @doc Hangs up a specific call.  This uses the request_uuid from make_call\1.
+%%      ReqId UUID of a request.
+-spec hangup_request(ReqId::string()) -> json_term().
+hangup_request(ReqId) -> api(delete, "Request/" ++ ReqId ++ "/").
+
+%% @spec make_call(Params::params()) -> json_term().
 %% @doc Create an outbound call.
 %%      Required Params
 %%      from       The phone number to be used as the caller id
@@ -427,76 +495,7 @@ modify_application(AppId, Params) ->
 -spec make_call(Params::params()) -> json_term().
 make_call(Params) -> api(post, "Call/", Params).
 
-
-%% @spec get_cdrs() -> json_term()
-%% @doc Gets all call detail records.
--spec get_cdrs() -> json_term().
-get_cdrs() -> get_cdrs([]).
-
-%% @spec get_cdrs(Params::params()) -> json_term()
-%% @doc Gets all call detail records.
-%%      subaccount     The id of the subaccount.
-%%      call_direction Filter the results
-%%                     by call direction.
-%%                     The valid inputs are inbound and outbound.
-%%      from_number    Filter the results
-%%                     by the number from where the call originated.
-%%      to_number      Filter the results
-%%                     by the number to which the call was made.
-%%      bill_duration  Filter the results
-%%                     according to billed duration.
-%%                     The value of billed duration is in seconds.
-%%      end_time       Filter the results
-%%                     according to the time of completion.
-%%      limit          Used to display the number of results per page.
-%%                     The maximum number of results that can be fetched is 20.
-%%      offset         Denotes the number of value items by which the results
-%%                     should be offset.
--spec get_cdrs(Params::params()) -> json_term().
-get_cdrs(Params) -> api(get, "Call/", Params).
-
-%% @spec get_cdr(CallId::string()) -> json_term()
-%% @doc Gets call detail record for a specified call.
-%%      CallId UUID of a call.
--spec get_cdr(CallId::string()) -> json_term().
-get_cdr(CallId) -> get_cdr(CallId, []).
-
-%% @spec get_cdr(CallId::string(), Params::params()) -> json_term()
-%% @doc Gets call detail record for a specified call.
-%%      CallId UUID of a call.
-%%
-%%      Optional Params
-%%      subaccount The id of the subaccount.
-%%      limit      The number of results.
-%%      offset     The number of pages by which the results should be offset.
--spec get_cdr(CallId::string(), Params::params()) -> json_term().
-get_cdr(CallId, Params) -> api(get, "Call/" ++ CallId ++ "/", Params).
-
-%% @spec get_live_call(CallId::string()) -> json_term()
-%% @doc Gets details of a specific active call.
-%%      CallId UUID of a call.
--spec get_live_call(CallId::string()) -> json_term().
-get_live_call(CallId) ->
-    api(get, "Call/" ++ CallId ++ "/", [{status, <<"live">>}]).
-
-%% @spec get_live_calls() -> json_term()
-%% @doc Gets all currently active calls.
--spec get_live_calls() -> json_term().
-get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
-
-%% @spec hangup_call(CallId::string()) -> json_term()
-%% @doc Hangs up a specific call.
-%%      CallId UUID of a call.
--spec hangup_call(CallId::string()) -> json_term().
-hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
-
-%% @spec hangup_request(ReqId::string()) -> json_term()
-%% @doc Hangs up a specific call.  This uses the request_uuid from make_call\1.
-%%      ReqId UUID of a request.
--spec hangup_request(ReqId::string()) -> json_term().
-hangup_request(ReqId) -> api(delete, "Request/" ++ ReqId ++ "/").
-
-%% @spec play(CallId::string(), Params::params()) -> json_term()
+%% @spec play(CallId::string(), Params::params()) -> json_term().
 %% @doc Plays a sound during a call.
 %%      Required Params
 %%      urls A single URL or a list of comma separated URLs
@@ -514,12 +513,12 @@ hangup_request(ReqId) -> api(delete, "Request/" ++ ReqId ++ "/").
 -spec play(CallId::string(), Params::params()) -> json_term().
 play(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Play/", Params).
 
-%% @spec record(CallId::string()) -> json_term()
+%% @spec record(CallId::string()) -> json_term().
 %% @doc Record a call.
 -spec record(CallId::string()) -> json_term().
 record(CallId) -> record(CallId, []).
 
-%% @spec record(CallId::string(), Params::params()) -> json_term()
+%% @spec record(CallId::string(), Params::params()) -> json_term().
 %% @doc Record a call.
 %%      time_limit           Max recording duration in seconds. Defaults to 60.
 %%      file_format          The format of the recording.
@@ -554,7 +553,7 @@ record(CallId) -> record(CallId, []).
 -spec record(CallId::string(), Params::params()) -> json_term().
 record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
 
-%% @spec send_digits(CallId::string(), Params::params()) -> json_term
+%% @spec send_digits(CallId::string(), Params::params()) -> json_term().
 %% @doc Send digits to a call.
 %%      Required Params
 %%      digits Digits to send.
@@ -565,7 +564,7 @@ record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
 -spec send_digits(CallId::string(), Params::params()) -> json_term().
 send_digits(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/DTMF/", Params).
 
-%% @spec speak(CallId::string(), Params::params()) -> json_term
+%% @spec speak(CallId::string(), Params::params()) -> json_term().
 %% @doc Play text during a call.
 %%      Required Params
 %%      text Text to be played.
@@ -581,19 +580,19 @@ send_digits(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/DTMF/", Params).
 -spec speak(CallId::string(), Params::params()) -> json_term().
 speak(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Speak/", Params).
 
-%% @spec stop_play(CallId::string()) -> json_term
+%% @spec stop_play(CallId::string()) -> json_term().
 %% @doc Stop playing all sounds during a call.
 -spec stop_play(CallId::string()) -> json_term().
 stop_play(CallId) -> api(delete, "Call/" ++ CallId ++ "/Play/").
 
-%% @spec stop_record(CallId::string()) -> json_term
+%% @spec stop_record(CallId::string()) -> json_term().
 %% @doc Stop recording all calls.
 %%      Optional Params
 %%      URL Stops specific recording.
 -spec stop_record(CallId::string()) -> json_term().
 stop_record(CallId) -> stop_record(CallId, []).
 
-%% @spec stop_record(CallId::string(), Params::params()) -> json_term
+%% @spec stop_record(CallId::string(), Params::params()) -> json_term().
 %% @doc Stop recording all calls.
 %%      Optional Params
 %%      URL Stops specific recording.
@@ -601,17 +600,17 @@ stop_record(CallId) -> stop_record(CallId, []).
 stop_record(CallId, Params) ->
     api(delete, "Call/" ++ CallId ++ "/Record/", Params).
 
-%% @spec stop_speak(CallId::string()) -> json_term
+%% @spec stop_speak(CallId::string()) -> json_term().
 %% @doc Stop playing text on specified call.
 -spec stop_speak(CallId::string()) -> json_term().
 stop_speak(CallId) -> api(delete, "Call/" ++ CallId ++ "/Speak/").
 
-%% @spec transfer_call(CallId::string()) -> json_term()
+%% @spec transfer_call(CallId::string()) -> json_term().
 %% @doc Transfer calls from one url to another.
 -spec transfer_call(CallId::string()) -> json_term().
 transfer_call(CallId) -> api(post, "Call/" ++ CallId ++ "/", []).
 
-%% @spec transfer_call(CallId::string(), Params::params()) -> json_term()
+%% @spec transfer_call(CallId::string(), Params::params()) -> json_term().
 %% @doc Transfer calls from one url to another.
 %%      legs        'aleg', 'bleg' or 'both'.
 %%                  Defaults to 'aleg' 'aleg' will transfer call_uuid.
