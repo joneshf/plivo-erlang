@@ -18,8 +18,8 @@
 
 %% Call.
 -export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
-         get_live_calls/0, hangup_call/1, make_call/1, play/2, record/1,
-         record/2, send_digits/2, speak/2, stop_play/1, stop_record/1,
+         get_live_calls/0, hangup_call/1, hangup_request/1, make_call/1, play/2,
+         record/1, record/2, send_digits/2, speak/2, stop_play/1, stop_record/1,
          stop_record/2, stop_speak/1, transfer_call/1, transfer_call/2]).
 
 %% gen_server stuff
@@ -489,6 +489,12 @@ get_live_calls() -> api(get, "Call/", [{status, <<"live">>}]).
 %%      CallId UUID of a call.
 -spec hangup_call(CallId::string()) -> json_term().
 hangup_call(CallId) -> api(delete, "Call/" ++ CallId ++ "/").
+
+%% @spec hangup_request(ReqId::string()) -> json_term()
+%% @doc Hangs up a specific call.  This uses the request_uuid from make_call\1.
+%%      ReqId UUID of a request.
+-spec hangup_request(ReqId::string()) -> json_term().
+hangup_request(ReqId) -> api(delete, "Request/" ++ ReqId ++ "/").
 
 %% @spec play(CallId::string(), Params::params()) -> json_term()
 %% @doc Plays a sound during a call.
