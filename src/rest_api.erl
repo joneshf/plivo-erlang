@@ -19,8 +19,8 @@
 %% Call.
 -export([get_cdr/1, get_cdr/2, get_cdrs/0, get_cdrs/1, get_live_call/1,
          get_live_calls/0, hangup_call/1, make_call/1, play/2, record/1,
-         record/2, speak/2, stop_play/1, stop_record/1, stop_record/2,
-         stop_speak/1, transfer_call/1, transfer_call/2]).
+         record/2, send_digits/2, speak/2, stop_play/1, stop_record/1,
+         stop_record/2, stop_speak/1, transfer_call/1, transfer_call/2]).
 
 %% gen_server stuff
 -export([start_link/0]).
@@ -547,6 +547,17 @@ record(CallId) -> record(CallId, []).
 %%                           Defaults to POST.
 -spec record(CallId::string(), Params::params()) -> json_term().
 record(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/Record/", Params).
+
+%% @spec send_digits(CallId::string(), Params::params()) -> json_term
+%% @doc Send digits to a call.
+%%      Required Params
+%%      digits Digits to send.
+%%      Optional Params
+%%      leg The leg to be used, can be]
+%%          aleg (the current call) or bleg (the other party in a Dial).
+%%          Defaults to aleg.
+-spec send_digits(CallId::string(), Params::params()) -> json_term().
+send_digits(CallId, Params) -> api(post, "Call/" ++ CallId ++ "/DTMF/", Params).
 
 %% @spec speak(CallId::string(), Params::params()) -> json_term
 %% @doc Play text during a call.
