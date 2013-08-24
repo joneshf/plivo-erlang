@@ -22,6 +22,10 @@
          record/1, record/2, send_digits/2, speak/2, stop_play/1, stop_record/1,
          stop_record/2, stop_speak/1, transfer_call/1, transfer_call/2]).
 
+%% Endpoint.
+-export([create_endpoint/1, delete_endpoint/1, get_endpoint/1, get_endpoints/0,
+         modify_endpoint/2]).
+
 %% gen_server stuff
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -634,6 +638,48 @@ transfer_call (CallId, Params) -> api(post, "Call/" ++ CallId ++ "/", Params).
 %% ===================================================================
 %% Endpoint
 %% ===================================================================
+
+%% @spec create_endpoint(Params::params()) -> json_term().
+%% @doc Creates a SIP endpoint.
+%%      Required Params
+%%      username The username for the endpoint to be created.
+%%      password The password for your endpoint username.
+%%      alias    Alias for this endpoint
+%%
+%%      Optional Params
+%%      app_id  The app_id of the application that is to be attached
+%%              to this endpoint.
+%%              If this is not provided the default_endpoint_app
+%%              is attached to this endpoint.
+-spec create_endpoint(Params::params()) -> json_term().
+create_endpoint(Params) -> api(post, "Endpoint/", Params).
+
+%% @spec delete_endpoint(EId::string()) -> json_term().
+%% @doc Delete a specific endpoint.
+-spec delete_endpoint(EId::string()) -> json_term().
+delete_endpoint(EId) -> api(delete, "Endpoint/" ++ EId ++ "/").
+
+%% @spec get_endpoint(EId::string()) -> json_term().
+%% @doc Get a specific endpoint.
+-spec get_endpoint(EId::string()) -> json_term().
+get_endpoint(EId) -> api(get, "Endpoint/" ++ EId ++ "/").
+
+%% @spec get_endpoints() -> json_term().
+%% @doc Get all endpoints.
+-spec get_endpoints() -> json_term().
+get_endpoints() -> api(get, "Endpoint/").
+
+%% @spec modify_endpoint(EId::string(), Params::params()) -> json_term().
+%% @doc Modify a specific endpoint.
+%%      Optional Params
+%%      password The password for your endpoint username.
+%%      alias    Alias for this endpoint
+%%      app_id  The app_id of the application that is to be attached
+%%              to this endpoint.
+%%              If this is not provided the default_endpoint_app
+%%              is attached to this endpoint.
+-spec modify_endpoint(EId::string(), Params::params()) -> json_term().
+modify_endpoint(EId, Params) -> api(post, "Endpoint/" ++ EId ++ "/", Params).
 
 %% ===================================================================
 %% Message
