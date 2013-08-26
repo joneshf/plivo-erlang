@@ -29,6 +29,9 @@
 %% Message.
 -export([get_message/1, get_messages/0, get_messages/1, send_message/1]).
 
+%% Pricing.
+-export([get_pricing/1]).
+
 %% gen_server stuff
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -753,6 +756,13 @@ send_message(Params) -> api(post, "Message/", Params).
 %% ===================================================================
 %% Pricing
 %% ===================================================================
+
+%% @spec get_pricing(Params::params()) -> json_term().
+%% @doc Gets the pricing for the specified country.
+%%      Required Params
+%%      country_iso The 2 digit country ISO code. eg. US, GB, QA
+-spec get_pricing(Params::params()) -> json_term().
+get_pricing(Params) -> api(get, "Pricing/", Params).
 
 %% ===================================================================
 %% Recording
