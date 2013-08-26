@@ -32,6 +32,9 @@
 %% Pricing.
 -export([get_pricing/1]).
 
+%% Recording.
+-export([get_recording/1, get_recordings/1]).
+
 %% gen_server stuff
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -767,3 +770,21 @@ get_pricing(Params) -> api(get, "Pricing/", Params).
 %% ===================================================================
 %% Recording
 %% ===================================================================
+
+%% @spec get_recording(RId::string()) -> json_term().
+%% @doc Gets a specific recording.
+-spec get_recording(RId::string()) -> json_term().
+get_recording(RId) -> api(get, "Recording/" ++ RId ++ "/").
+
+%% @spec get_recordings(Params::params()) -> json_term().
+%% @doc Gets all the recordings for this account.
+%%      Optional Params
+%%      subaccount auth_id of the subaccount.
+%%                 Lists only those recordings of the main accounts which
+%%                 are tied to the specified subaccount.
+%%      call_uuid  Used to filter recordings for a specific call.
+%%      add_time   Used to filter out recordings according to the time added.
+%%      limit      The number of results.
+%%      offset     The number of pages by which the results should be offset.
+-spec get_recordings(Params::params()) -> json_term().
+get_recordings(Params) -> api(get, "Recording/", Params).
