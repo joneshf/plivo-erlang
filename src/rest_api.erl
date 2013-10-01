@@ -27,10 +27,10 @@
          stop_record/2, stop_speak/1, transfer_call/1, transfer_call/2]).
 
 %% Conference.
--export([get_live_conferences/1, get_live_conference/1,
-         hangup_live_conferences/1, hangup_live_conference/1, hangup_member/1,
-         kick_member/1, mute_member/1, unmute_member/1, play_member/1,
-         unplay_member/1, speak_member/1, deaf_member/1, undeaf_member/1,
+-export([get_live_conferences/0, get_live_conference/1,
+         hangup_live_conferences/0, hangup_live_conference/1, hangup_member/2,
+         kick_member/2, mute_member/2, unmute_member/2, play_member/3,
+         unplay_member/2, speak_member/3, deaf_member/2, undeaf_member/2,
          record_conference/1, stop_record_conference/1]).
 
 %% Endpoint.

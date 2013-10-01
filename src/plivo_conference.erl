@@ -1,9 +1,9 @@
 -module(plivo_conference).
 
--export([get_live_conferences/1, get_live_conference/1,
-         hangup_live_conferences/1, hangup_live_conference/1, hangup_member/1,
-         kick_member/1, mute_member/1, unmute_member/1, play_member/1,
-         unplay_member/1, speak_member/1, deaf_member/1, undeaf_member/1,
+-export([get_live_conferences/0, get_live_conference/1,
+         hangup_live_conferences/0, hangup_live_conference/1, hangup_member/2,
+         kick_member/2, mute_member/2, unmute_member/2, play_member/3,
+         unplay_member/2, speak_member/3, deaf_member/2, undeaf_member/2,
          record_conference/1, stop_record_conference/1]).
 
 %% @spec get_live_conferences() -> jsx:json_term()
@@ -37,13 +37,17 @@ hangup_member(CName, MId) ->
 %% @doc Kicks specific member from a conference call.
 -spec kick_member(CName::string(), MId::string()) -> jsx:json_term().
 kick_member(CName, MId) ->
-    rest_api:api(post, "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Kick/").
+    rest_api:api(post,
+                 "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Kick/",
+                 []).
 
 %% @spec mute_member(CName::string(), MId::string()) -> jsx:json_term()
 %% @doc Mutes a specific member in a conference call.
 -spec mute_member(CName::string(), MId::string()) -> jsx:json_term().
 mute_member(CName, MId) ->
-    rest_api:api(post, "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Mute/").
+    rest_api:api(post,
+                 "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Mute/",
+                 []).
 
 %% @spec unmute_member(CName::string(), MId::string()) -> jsx:json_term()
 %% @doc Unmutes a specific member in a conference call.
@@ -93,13 +97,16 @@ speak_member(CName, MId, Params) ->
 %% @doc Makes a member deaf in a conference call.
 -spec deaf_member(CName::string(), MId::string()) -> jsx:json_term().
 deaf_member(CName, MId) ->
-    rest_api(post, "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Deaf/").
+    rest_api:api(post,
+                 "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Deaf/",
+                 []).
 
 %% @spec undeaf_member(CName::string(), MId::string()) -> jsx:json_term()
 %% @doc Makes a member able to hear in a conference call.
 -spec undeaf_member(CName::string(), MId::string()) -> jsx:json_term().
 undeaf_member(CName, MId) ->
-    rest_api(delete, "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Deaf/").
+    rest_api:api(delete,
+                 "Conference/" ++ CName ++ "/Member/" ++ MId ++ "/Deaf/").
 
 %% @spec record_conference(CId::string()) -> jsx:json_term()
 %% @doc Records a specific conference call.
@@ -132,11 +139,10 @@ undeaf_member(CName, MId) ->
 %%                               Defaults to POST.
 -spec record_conference(CId::string()) -> jsx:json_term().
 record_conference(CId) ->
-    rest_api:api(post, "Conference/" ++ CId ++ "/Record/").
+    rest_api:api(post, "Conference/" ++ CId ++ "/Record/", []).
 
 %% @spec stop_record_conference(CId::string()) -> jsx:json_term()
 %% @doc Stops recording a specific conference call.
 -spec stop_record_conference(CId::string()) -> jsx:json_term().
 stop_record_conference(CId) ->
     rest_api:api(delete, "Conference/" ++ CId ++ "/Record/").
-
