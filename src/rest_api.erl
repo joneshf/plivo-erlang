@@ -26,6 +26,13 @@
          record/1, record/2, send_digits/2, speak/2, stop_play/1, stop_record/1,
          stop_record/2, stop_speak/1, transfer_call/1, transfer_call/2]).
 
+%% Conference.
+-export([get_live_conferences/1, get_live_conference/1,
+         hangup_live_conferences/1, hangup_live_conference/1, hangup_member/1,
+         kick_member/1, mute_member/1, unmute_member/1, play_member/1,
+         unplay_member/1, speak_member/1, deaf_member/1, undeaf_member/1,
+         record_conference/1, stop_record_conference/1]).
+
 %% Endpoint.
 -export([create_endpoint/1, delete_endpoint/1, get_endpoint/1, get_endpoints/0,
          modify_endpoint/2]).
@@ -320,6 +327,72 @@ transfer_call(CallId, Params) -> plivo_call:transfer_call(CallId, Params).
 %% ===================================================================
 %% Conference
 %% ===================================================================
+
+%% @spec get_live_conferences() -> jsx:json_term()
+-spec get_live_conferences() -> jsx:json_term().
+get_live_conferences() -> plivo_conference:get_live_conferences().
+
+%% @spec get_live_conference(CName::string()) -> jsx:json_term()
+-spec get_live_conference(CName::string()) -> jsx:json_term().
+get_live_conference(CName) -> plivo_conference:get_live_conference(CName).
+
+%% @spec hangup_live_conferences() -> jsx:json_term()
+-spec hangup_live_conferences() -> jsx:json_term().
+hangup_live_conferences() -> plivo_conference:hangup_live_conferences().
+
+%% @spec hangup_live_conference(CName::string()) -> jsx:json_term()
+-spec hangup_live_conference(CName::string()) -> jsx:json_term().
+hangup_live_conference(CName) -> plivo_conference:hangup_live_conference(CName).
+
+%% @spec hangup_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec hangup_member(CName::string(), MId::string()) -> jsx:json_term().
+hangup_member(CName, MId) -> plivo_conference:hangup_member(CName, MId).
+
+%% @spec kick_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec kick_member(CName::string(), MId::string()) -> jsx:json_term().
+kick_member(CName, MId) -> plivo_conference:kick_member(CName, MId).
+
+%% @spec mute_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec mute_member(CName::string(), MId::string()) -> jsx:json_term().
+mute_member(CName, MId) -> plivo_conference:mute_member(CName, MId).
+
+%% @spec unmute_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec unmute_member(CName::string(), MId::string()) -> jsx:json_term().
+unmute_member(CName, MId) -> plivo_conference:unmute_member(CName, MId).
+
+%% @spec play_member(CName::string(), MId::string(), Params::params()) ->
+%%       jsx:json_term()
+-spec play_member(CName::string(), MId::string(), Params::params()) ->
+      jsx:json_term().
+play_member(CName, MId, Params) ->
+    plivo_conference:play_member(CName, MId, Params).
+
+%% @spec unplay_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec unplay_member(CName::string(), MId::string()) -> jsx:json_term().
+unplay_member(CName, MId) -> plivo_conference:unplay_member(CName, MId).
+
+%% @spec speak_member(CName::string(), MId::string(), Params::params()) ->
+%%       jsx:json_term()
+-spec speak_member(CName::string(), MId::string(), Params::params()) ->
+      jsx:json_term().
+speak_member(CName, MId, Params) ->
+    plivo_conference:speak_member(CName, MId, Params).
+
+%% @spec deaf_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec deaf_member(CName::string(), MId::string()) -> jsx:json_term().
+deaf_member(CName, MId) -> plivo_conference:deaf_member(CName, MId).
+
+%% @spec undeaf_member(CName::string(), MId::string()) -> jsx:json_term()
+-spec undeaf_member(CName::string(), MId::string()) -> jsx:json_term().
+undeaf_member(CName, MId) -> plivo_conference:undeaf_member(CName, MId).
+
+%% @spec record_conference(CId::string()) -> jsx:json_term()
+-spec record_conference(CId::string()) -> jsx:json_term().
+record_conference(CId) -> plivo_conference:record_conference(CId).
+
+%% @spec stop_record_conference(CId::string()) -> jsx:json_term()
+-spec stop_record_conference(CId::string()) -> jsx:json_term().
+stop_record_conference(CId) -> plivo_conference:stop_record_conference(CId).
 
 %% ===================================================================
 %% Endpoint
