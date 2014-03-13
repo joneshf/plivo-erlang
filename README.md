@@ -29,7 +29,7 @@ $ rebar compile
 * Open up erl and set up your authorization.
 
 ```erlang
-$ erl -pa ebin deps/mochiweb/ebin
+$ erl -pa ebin deps/*/ebin
 
 1> application:start(plivo).
 ok
